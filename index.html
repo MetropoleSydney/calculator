@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Commission Calculator | Metropole Property Management Sydney</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #1F3A5F; --teal: #2E7D7A; --page: #F4F6F9; --card: #FFFFFF; --line: #D5DCE4;
+    --ink: #22303F; --muted: #6B7785; --input: #FFF6D6; --purple: #4B3F8F; --purple-bg: #EEECF8;
+    --red: #C0392B; --amber: #FFD966; --amber-ink: #3D2E00; --green: #1E7B4A;
+    --font: "Source Sans 3", "Segoe UI", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 16px/1.45 var(--font); }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 24px max(16px, env(safe-area-inset-left)) 40px; display: grid; gap: 18px; }
+  header { background: var(--navy); color: #fff; padding: 20px 22px; border-radius: 6px; }
+  header h1 { margin: 0; font-size: 26px; font-weight: 700; }
+  header p { margin: 4px 0 0; color: #C9D6E8; font-size: 15px; }
+  .card { background: var(--card); border-radius: 6px; overflow: hidden; }
+  .card h2 { margin: 0; background: var(--teal); color: #fff; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; padding: 8px 16px; }
+  form { display: grid; gap: 0; }
+  .row { display: grid; grid-template-columns: 1fr minmax(150px, 220px); align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--line); }
+  .row:last-of-type { border-bottom: 0; }
+  label { font-size: 16px; }
+  label small { display: block; color: var(--muted); font-size: 13px; }
+  input, select { width: 100%; font: 600 17px var(--font); color: #0B3FBF; background: var(--input); border: 1px solid var(--line); border-radius: 4px; padding: 8px 10px; text-align: right; }
+  select { text-align: left; }
+  input:focus, select:focus { outline: 3px solid #9CC3E6; outline-offset: 1px; }
+  .actions { display: flex; align-items: center; gap: 14px; padding: 14px 16px; flex-wrap: wrap; }
+  button { font: 700 16px var(--font); background: var(--navy); color: #fff; border: 0; border-radius: 4px; padding: 11px 22px; cursor: pointer; }
+  button:disabled { opacity: .6; cursor: wait; }
+  button:focus-visible { outline: 3px solid #9CC3E6; outline-offset: 2px; }
+  .hint { color: var(--muted); font-size: 13px; }
+  .error { color: var(--red); font-weight: 600; }
+  .flag { border-radius: 6px; padding: 12px 16px; font-weight: 700; text-align: center; }
+  .flag.red { background: var(--red); color: #fff; }
+  .flag.yellow { background: var(--amber); color: var(--amber-ink); }
+  .flag.green { background: var(--green); color: #fff; }
+  .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 14px; }
+  .tile { background: var(--purple-bg); border-radius: 6px; padding: 16px 10px; text-align: center; display: grid; gap: 4px; align-content: start; }
+  .tile .k { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--purple); }
+  .tile .v { font-size: 34px; font-weight: 700; color: var(--purple); font-variant-numeric: tabular-nums; }
+  .tile .n { font-size: 13px; color: var(--muted); }
+  .empty { padding: 18px 16px; color: var(--muted); }
+  footer { color: var(--muted); font-size: 13px; }
+  @media (max-width: 560px) {
+    .row { grid-template-columns: 1fr; gap: 6px; }
+    .tiles { grid-template-columns: 1fr; }
+    header h1 { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Commission Calculator</h1>
+    <p>Enter the deal details to see the commission earned.</p>
+  </header>
+
+  <section class="card">
+    <h2>Deal inputs</h2>
+    <form id="calc" novalidate>
+      <div class="row">
+        <label for="name">Your name <small>So we know who ran this calculation</small></label>
+        <input id="name" type="text" maxlength="80" autocomplete="name" style="text-align:left">
+      </div>
+      <div class="row">
+        <label for="fee">Management fee <small>% of annual rent</small></label>
+        <input id="fee" type="number" inputmode="decimal" min="0" max="100" step="0.01" value="5.5">
+      </div>
+      <div class="row">
+        <label for="rent">Weekly rent <small>$ per week</small></label>
+        <input id="rent" type="number" inputmode="decimal" min="0" step="1" value="1100">
+      </div>
+      <div class="row">
+        <label for="months">Months free <small>0 to 6</small></label>
+        <select id="months"></select>
+      </div>
+      <div class="row">
+        <label for="suburb">Property suburb <small>Not listed? Choose "Other suburb"</small></label>
+        <select id="suburb"></select>
+      </div>
+      <div class="actions">
+        <button id="go" type="submit">Calculate commission</button>
+        <span id="status" class="hint" role="status" aria-live="polite">Example figures shown. Change them and press Calculate.</span>
+      </div>
+    </form>
+  </section>
+
+  <div id="flags" style="display:grid;gap:8px"></div>
+
+  <section class="card" aria-live="polite">
+    <h2>Commission earned</h2>
+    <div id="results" class="empty">Your upfront, renewal and trail commission will appear here. All commission is subject to the terms and conditions below.</div>
+  </section>
+
+  <section class="card" id="terms">
+    <h2>Commission terms and conditions</h2>
+    <div style="padding:14px 16px;font-size:14px;line-height:1.5">
+      <p style="margin:0 0 8px">These terms apply to all commission shown by this calculator: upfront, renewal and trail. Referrer means the person who refers the new management to Metropole Property Management Sydney, whether an employee or an outside referrer.</p>
+      <ol style="margin:0;padding-left:20px;display:grid;gap:8px">
+      <li><strong>Who can be paid.</strong> Commission is only payable to a referrer who is an employee of Metropole Property Management Sydney, or an outside referrer who holds a current NSW real estate licence on the payment date. No commission is payable to an outside referrer who is not licensed.</li>
+      <li><strong>Family members.</strong> No commission is payable on a property where any owner is a family member of the referrer. Family member means the referrer&#x27;s spouse or partner, parent, child, brother or sister, grandparent or grandchild, including step and in-law relationships.</li>
+      <li><strong>Self-owned property.</strong> No commission is payable on a property owned wholly or partly by the referrer, including through a company, trust or other entity the referrer controls or benefits from.</li>
+      <li><strong>When commission is paid.</strong> Upfront commission is paid in the second month of the management. Renewal commission is paid in the second month after the management renews. Trail commission is paid once a year: to an employee while they remain employed by Metropole Property Management Sydney, and to an outside referrer while the management remains with Metropole Property Management Sydney. Commission is only paid if the management is still with Metropole Property Management Sydney on the payment date.</li>
+      <li><strong>When commission is earned.</strong> Commission is not earned, and no entitlement to it arises, until its payment date.</li>
+      <li><strong>Employees: notice and termination.</strong> Where the referrer is an employee, no commission is payable if, on its payment date, the employee is serving a period of notice (given by either the employee or Metropole Property Management Sydney) or their employment with Metropole Property Management Sydney has ended for any reason. Any commission that would otherwise have become payable on or after that date is forfeited.</li>
+      <li><strong>Estimates only.</strong> Figures shown by this calculator are estimates. The commission payable is confirmed by Metropole Property Management Sydney at the signing of the new management agreement and payable on the payment date. Where a referrer is an employee, these terms are read together with the employee&#x27;s employment contract.</li>
+      </ol>
+    </div>
+  </section>
+
+  <footer>AMI = annual management income. Entries on this page are recorded by Metropole Property Management Sydney.</footer>
+</div>
+
+<script>
+  var API = "https://script.google.com/macros/s/AKfycbyUCpV8ck8QEYKFc60XwPqCKGXYxVifwsCOAIQAEGKq0uzqTuZtC0ZpIxZxqz1cSB24/exec";
+  var PERSON = (new URLSearchParams(location.search).get("p") || "").slice(0, 60);
+  var MSG = "This deal will require approval from a Metropole Property Management Sydney Director";
+
+  var monthsSel = document.getElementById("months");
+  for (var m = 0; m <= 6; m++) {
+    var o = document.createElement("option"); o.value = m; o.textContent = m + (m === 1 ? " month" : " months");
+    if (m === 2) o.selected = true; monthsSel.appendChild(o);
+  }
+  var subSel = document.getElementById("suburb");
+  var ph = document.createElement("option"); ph.value = ""; ph.textContent = "Loading suburbs..."; subSel.appendChild(ph);
+
+  function call(params) {
+    var q = new URLSearchParams(params); if (PERSON) q.set("p", PERSON);
+    return fetch(API + "?" + q.toString(), { method: "GET", credentials: "omit", redirect: "follow" })
+      .then(function (r) { if (!r.ok) throw new Error("The calculator could not be reached. Try again in a minute."); return r.json(); })
+      .then(function (b) { if (!b.ok) throw new Error(b.error || "Something went wrong. Try again."); return b; });
+  }
+
+  var money = function (n) { return "$" + Number(n).toLocaleString("en-AU", { maximumFractionDigits: 0 }); };
+  var statusEl = document.getElementById("status");
+  var btn = document.getElementById("go");
+  btn.disabled = true;
+  call({ api: "init" }).then(function (b) {
+    ph.textContent = "Select a suburb";
+    b.suburbs.forEach(function (s) { var o = document.createElement("option"); o.value = s; o.textContent = s; subSel.appendChild(o); });
+    subSel.value = "Randwick"; btn.disabled = false;
+  }).catch(function (err) {
+    ph.textContent = "Suburbs unavailable";
+    statusEl.className = "hint error"; statusEl.textContent = err.message + " Reload the page to try again.";
+  });
+
+  document.getElementById("calc").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    if (!subSel.value) { statusEl.className = "hint error"; statusEl.textContent = "Select the property suburb."; subSel.focus(); return; }
+    btn.disabled = true; statusEl.className = "hint"; statusEl.textContent = "Calculating...";
+    call({
+      api: "calc",
+      name: document.getElementById("name").value,
+      fee: document.getElementById("fee").value,
+      rent: document.getElementById("rent").value,
+      months: monthsSel.value,
+      suburb: subSel.value
+    }).then(function (b) { show(b.result); }).catch(function (err) {
+      btn.disabled = false; statusEl.className = "hint error";
+      statusEl.textContent = (err && err.message) ? err.message.replace(/^Error:\s*/, "") : "Something went wrong. Try again.";
+    });
+  });
+
+  function show(r) {
+    btn.disabled = false; statusEl.className = "hint"; statusEl.textContent = "Done. Change any figure and press Calculate again.";
+    var flags = document.getElementById("flags"); flags.textContent = "";
+    if (r.approvalAmi) addFlag(flags, r.approvalAmi, MSG + " (low AMI)");
+    if (r.approvalMonths) addFlag(flags, "red", MSG + " (more than " + r.monthsLimit + " months free)");
+    if (r.additional) addFlag(flags, "green", "You may be eligible for additional commission, check with a director");
+    var box = document.getElementById("results"); box.className = "tiles"; box.textContent = "";
+    tile(box, "Upfront", money(r.upfront), "Based on year 1 AMI, after months free");
+    tile(box, "Renewal", money(r.renewal), "Based on stabilised AMI");
+    tile(box, "Trail (per year)", money(r.trail), r.trailNote);
+  }
+  function addFlag(parent, colour, text) {
+    var d = document.createElement("div"); d.className = "flag " + colour; d.textContent = text; parent.appendChild(d);
+  }
+  function tile(parent, k, v, n) {
+    var t = document.createElement("div"); t.className = "tile";
+    [["k", k], ["v", v], ["n", n]].forEach(function (p) { var s = document.createElement("div"); s.className = p[0]; s.textContent = p[1]; t.appendChild(s); });
+    parent.appendChild(t);
+  }
+</script>
+</body>
+</html>
