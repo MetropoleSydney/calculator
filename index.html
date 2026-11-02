@@ -120,7 +120,9 @@
           <label><input type="radio" name="rtype" value="outside"> An outside referrer</label>
         </div></div>
       <div class="row" id="licrow" hidden><label for="rlic">NSW real estate licence number <small>Required for outside referrers</small></label><input id="rlic" type="text" maxlength="40"></div>
-      <div class="row"><label for="paddr">Property address</label><input id="paddr" type="text" maxlength="200" autocomplete="off" required></div>
+      <div class="row"><label for="paddr">Street address <small>Number and street only, e.g. 4/12 Smith Street</small></label><input id="paddr" type="text" maxlength="200" autocomplete="off" required></div>
+      <div class="row"><span>Suburb <small>Change it in the deal inputs above</small></span><strong id="subshow" style="font-size:17px">-</strong></div>
+      <div class="row" id="othrow" hidden><label for="osub">Property suburb <small>Not on our list, so no trail commission</small></label><input id="osub" type="text" maxlength="60" autocomplete="off"></div>
       <div class="row"><label for="oname">Owner's name</label><input id="oname" type="text" maxlength="120" autocomplete="off" required></div>
       <div class="row"><label for="ophone">Owner's phone</label><input id="ophone" type="tel" maxlength="40" autocomplete="off" required></div>
       <div class="row wide"><label for="rnotes">Notes <small>Optional: anything we should know</small></label><textarea id="rnotes" maxlength="1000"></textarea></div>
@@ -179,7 +181,7 @@
   call({ api: "init" }).then(function (b) {
     ph.textContent = "Select a suburb";
     b.suburbs.forEach(function (s) { var o = document.createElement("option"); o.value = s; o.textContent = s; subSel.appendChild(o); });
-    subSel.value = "Randwick"; btn.disabled = false;
+    subSel.value = "Randwick"; btn.disabled = false; showSuburb();
   }).catch(function (err) {
     ph.textContent = "Suburbs unavailable";
     statusEl.className = "hint error"; statusEl.textContent = err.message + " Reload the page to try again.";
@@ -211,6 +213,12 @@
     el.addEventListener("change", function () { document.getElementById("licrow").hidden = (el.value !== "outside" || !el.checked); });
   });
   function val(id) { return document.getElementById(id).value.trim(); }
+  function showSuburb() {
+    var s = subSel.value;
+    document.getElementById("subshow").textContent = s ? s : "Select it in the deal inputs above";
+    document.getElementById("othrow").hidden = (s !== "Other suburb");
+  }
+  subSel.addEventListener("change", showSuburb);
   function refError(msg, id) { refStatus.className = "hint error"; refStatus.textContent = msg; if (id) document.getElementById(id).focus(); }
 
   refForm.addEventListener("submit", function (ev) {
@@ -220,10 +228,11 @@
     if (!val("rphone")) return refError("Please fill in your phone number.", "rphone");
     if (!typeEl) return refError("Please say whether you are an employee or an outside referrer.");
     if (typeEl.value === "outside" && !val("rlic")) return refError("Outside referrers must give their NSW real estate licence number.", "rlic");
-    if (!val("paddr")) return refError("Please fill in the property address.", "paddr");
+    if (!val("paddr")) return refError("Please fill in the street address.", "paddr");
+    if (!subSel.value) return refError("Please select the property suburb in the deal inputs above.", "suburb");
+    if (subSel.value === "Other suburb" && !val("osub")) return refError("Please type the property's suburb.", "osub");
     if (!val("oname")) return refError("Please fill in the owner's name.", "oname");
     if (!val("ophone")) return refError("Please fill in the owner's phone number.", "ophone");
-    if (!subSel.value) return refError("Please select the property suburb in the deal inputs above.", "suburb");
     if (!document.getElementById("consent").checked) return refError("Please confirm the owner has agreed to be contacted.", "consent");
 
     refBtn.disabled = true; refStatus.className = "hint"; refStatus.textContent = "Sending...";
@@ -231,7 +240,7 @@
       api: "refer", p: PERSON,
       referrerName: val("rname"), referrerPhone: val("rphone"), referrerEmail: val("remail"),
       referrerType: typeEl.value, licence: val("rlic"),
-      address: val("paddr"), ownerName: val("oname"), ownerPhone: val("ophone"), notes: val("rnotes"),
+      street: val("paddr"), otherSuburb: val("osub"), ownerName: val("oname"), ownerPhone: val("ophone"), notes: val("rnotes"),
       ownerConsent: document.getElementById("consent").checked,
       fee: document.getElementById("fee").value, rent: document.getElementById("rent").value,
       months: monthsSel.value, suburb: subSel.value
