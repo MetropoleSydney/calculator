@@ -75,7 +75,7 @@
     <h2>Deal inputs</h2>
     <form id="calc" novalidate>
       <div class="row">
-        <label for="name">Your name <small>So we know who ran this calculation</small></label>
+        <label for="name">Referrer's name <small>Used for your calculations and any referral you send</small></label>
         <input id="name" type="text" maxlength="80" autocomplete="name" style="text-align:left">
       </div>
       <div class="row">
@@ -111,9 +111,8 @@
   <section class="card ref" id="refer">
     <h2>Refer this deal to Metropole</h2>
     <form id="refform" novalidate>
-      <div class="row"><label for="rname">Your name</label><input id="rname" type="text" maxlength="120" autocomplete="name" required></div>
-      <div class="row"><label for="rphone">Your phone</label><input id="rphone" type="tel" maxlength="40" autocomplete="tel" required></div>
-      <div class="row"><label for="remail">Your email <small>Optional</small></label><input id="remail" type="email" maxlength="120" autocomplete="email"></div>
+      <div class="row"><label for="rphone">Referrer's phone</label><input id="rphone" type="tel" maxlength="40" autocomplete="tel" required></div>
+      <div class="row"><label for="remail">Referrer's email <small>Optional</small></label><input id="remail" type="email" maxlength="120" autocomplete="email"></div>
       <div class="row"><span>Are you</span>
         <div class="choice" role="radiogroup" aria-label="Referrer type">
           <label><input type="radio" name="rtype" value="employee"> An employee</label>
@@ -123,10 +122,10 @@
       <div class="row"><label for="paddr">Street address <small>Number and street only, e.g. 4/12 Smith Street</small></label><input id="paddr" type="text" maxlength="200" autocomplete="off" required></div>
       <div class="row"><span>Suburb <small>Change it in the deal inputs above</small></span><strong id="subshow" style="font-size:17px">-</strong></div>
       <div class="row" id="othrow" hidden><label for="osub">Property suburb <small>Not on our list, so no trail commission</small></label><input id="osub" type="text" maxlength="60" autocomplete="off"></div>
-      <div class="row"><label for="oname">Owner's name</label><input id="oname" type="text" maxlength="120" autocomplete="off" required></div>
-      <div class="row"><label for="ophone">Owner's phone</label><input id="ophone" type="tel" maxlength="40" autocomplete="off" required></div>
+      <div class="row"><label for="oname">Property owner's name</label><input id="oname" type="text" maxlength="120" autocomplete="off" required></div>
+      <div class="row"><label for="ophone">Property owner's phone number</label><input id="ophone" type="tel" maxlength="40" autocomplete="off" required></div>
       <div class="row wide"><label for="rnotes">Notes <small>Optional: anything we should know</small></label><textarea id="rnotes" maxlength="1000"></textarea></div>
-      <label class="consent"><input id="consent" type="checkbox"> The owner has agreed to be contacted by Metropole Property Management Sydney about managing this property.</label>
+      <label class="consent"><input id="consent" type="checkbox"> The property owner has agreed to be contacted by Metropole Property Management Sydney about managing this property.</label>
       <div class="actions">
         <button id="refgo" type="submit">Submit to Metropole</button>
         <span id="refstatus" class="hint" role="status" aria-live="polite">The deal figures above are sent with your referral.</span>
@@ -206,9 +205,6 @@
 
   // ---- Referral ("Submit to Metropole") ----
   var refForm = document.getElementById("refform"), refBtn = document.getElementById("refgo"), refStatus = document.getElementById("refstatus");
-  var rname = document.getElementById("rname"), rnameTouched = false;
-  rname.addEventListener("input", function () { rnameTouched = true; });
-  document.getElementById("name").addEventListener("input", function (e) { if (!rnameTouched) rname.value = e.target.value; });
   Array.prototype.forEach.call(document.querySelectorAll('input[name="rtype"]'), function (el) {
     el.addEventListener("change", function () { document.getElementById("licrow").hidden = (el.value !== "outside" || !el.checked); });
   });
@@ -224,21 +220,21 @@
   refForm.addEventListener("submit", function (ev) {
     ev.preventDefault();
     var typeEl = document.querySelector('input[name="rtype"]:checked');
-    if (!val("rname")) return refError("Please fill in your name.", "rname");
-    if (!val("rphone")) return refError("Please fill in your phone number.", "rphone");
+    if (!val("name")) return refError("Please fill in the referrer's name at the top of the page.", "name");
+    if (!val("rphone")) return refError("Please fill in the referrer's phone number.", "rphone");
     if (!typeEl) return refError("Please say whether you are an employee or an outside referrer.");
     if (typeEl.value === "outside" && !val("rlic")) return refError("Outside referrers must give their NSW real estate licence number.", "rlic");
     if (!val("paddr")) return refError("Please fill in the street address.", "paddr");
     if (!subSel.value) return refError("Please select the property suburb in the deal inputs above.", "suburb");
     if (subSel.value === "Other suburb" && !val("osub")) return refError("Please type the property's suburb.", "osub");
-    if (!val("oname")) return refError("Please fill in the owner's name.", "oname");
-    if (!val("ophone")) return refError("Please fill in the owner's phone number.", "ophone");
+    if (!val("oname")) return refError("Please fill in the property owner's name.", "oname");
+    if (!val("ophone")) return refError("Please fill in the property owner's phone number.", "ophone");
     if (!document.getElementById("consent").checked) return refError("Please confirm the owner has agreed to be contacted.", "consent");
 
     refBtn.disabled = true; refStatus.className = "hint"; refStatus.textContent = "Sending...";
     var payload = {
       api: "refer", p: PERSON,
-      referrerName: val("rname"), referrerPhone: val("rphone"), referrerEmail: val("remail"),
+      referrerName: val("name"), referrerPhone: val("rphone"), referrerEmail: val("remail"),
       referrerType: typeEl.value, licence: val("rlic"),
       street: val("paddr"), otherSuburb: val("osub"), ownerName: val("oname"), ownerPhone: val("ophone"), notes: val("rnotes"),
       ownerConsent: document.getElementById("consent").checked,
