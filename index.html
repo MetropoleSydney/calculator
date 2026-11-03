@@ -260,7 +260,7 @@
     if (r.additional) addFlag(flags, "green", "You may be eligible for additional commission, check with a director");
     var box = document.getElementById("results"); box.className = "tiles"; box.textContent = "";
     tile(box, "Upfront", money(r.upfront), "Based on year 1 AMI, after months free");
-    tile(box, "Renewal", money(r.renewal), "Based on stabilised AMI");
+    tile(box, "Renewal", money(r.renewal), "Paid once, for year 2. Based on stabilised AMI");
     tile(box, "Trail (per year)", money(r.trail), r.trailNote);
   }
   function addFlag(parent, colour, text) {
