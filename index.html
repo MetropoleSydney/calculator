@@ -161,7 +161,7 @@
   var monthsSel = document.getElementById("months");
   for (var m = 0; m <= 6; m++) {
     var o = document.createElement("option"); o.value = m; o.textContent = m + (m === 1 ? " month" : " months");
-    if (m === 2) o.selected = true; monthsSel.appendChild(o);
+    if (m === 0) o.selected = true; monthsSel.appendChild(o);
   }
   var subSel = document.getElementById("suburb");
   var ph = document.createElement("option"); ph.value = ""; ph.textContent = "Loading suburbs..."; subSel.appendChild(ph);
